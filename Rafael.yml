@@ -1,6 +1,6 @@
 --- 
 - name: Instalar LibreOffice
-  hosts: PC
+  hosts: PCs
   become: true
   vars_files:
     - senha_root.yml
@@ -9,5 +9,27 @@
       ansible.builtin.apt:
         name: libreoffice
         state: present
+
+- name: Instalar Google Chrome
+  hosts: PCs
+  become: true
+  vars_files:
+    - senha_root.yml
+  tasks:
+    - name: Baixar o pacote .deb do Google Chrome
+      ansible.builtin.get_url:
+        url: "https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"
+        dest: "/tmp/google-chrome-stable_current_amd64.deb"
+
+    - name: Instalar o Google Chrome
+      ansible.builtin.apt:
+        deb: "/tmp/google-chrome-stable_current_amd64.deb"
+        state: present
+
+    - name: Remover o pacote .deb após a instalação
+      ansible.builtin.file:
+        path: "/tmp/google-chrome-stable_current_amd64.deb"
+        state: absent
+
   vars: 
     ansible_become_pass: "{{ senha_root }}"

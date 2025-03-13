@@ -1,0 +1,32 @@
+- name: Alterar hostname baseado no IP
+  hosts: all
+  become: yes
+  tasks:
+    - name: Obter endereço IP da máquina
+      ansible.builtin.shell: "hostname -I | awk '{print $1}'"
+      register: ip_address
+      changed_when: false
+
+    - name: Extrair os últimos números do IP
+      ansible.builtin.set_fact:
+        ip_suffix: "{{ ip_address.stdout.split('.')[-1] }}"
+
+    - name: Definir novo hostname no formato aluno-XX
+      ansible.builtin.hostname:
+        name: "aluno-{{ ip_suffix }}"
+
+    - name: Atualizar /etc/hostname
+      ansible.builtin.copy:
+        content: "aluno-{{ ip_suffix }}\n"
+        dest: /etc/hostname
+
+    - name: Atualizar /etc/hosts
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        regexp: "^127.0.1.1"
+        line: "127.0.1.1 aluno-{{ ip_suffix }}"
+        state: present
+
+    - name: Reiniciar para aplicar hostname
+      ansible.builtin.reboot:
+        msg: "Reiniciando para aplicar novo hostname"

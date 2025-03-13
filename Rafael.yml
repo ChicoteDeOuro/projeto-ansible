@@ -1,0 +1,13 @@
+--- 
+- name: Instalar LibreOffice
+  hosts: PC
+  become: true
+  vars_files:
+    - senha_root.yml
+  tasks:
+    - name: Instalar LibreOffice
+      ansible.builtin.apt:
+        name: libreoffice
+        state: present
+  vars: 
+    ansible_become_pass: "{{ senha_root }}"

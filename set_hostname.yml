@@ -1,9 +1,10 @@
+---
 - name: Alterar hostname baseado no IP
   hosts: all
   become: yes
   tasks:
-    - name: Obter endereço IP da máquina
-      ansible.builtin.shell: "hostname -I | awk '{print $1}'"
+    - name: Obter endereço IP primário da máquina
+      ansible.builtin.shell: "ip route get 8.8.8.8 | awk '{print $7}'"
       register: ip_address
       changed_when: false
 
@@ -20,13 +21,24 @@
         content: "aluno-{{ ip_suffix }}\n"
         dest: /etc/hostname
 
-    - name: Atualizar /etc/hosts
+    - name: Remover entradas antigas do /etc/hosts
       ansible.builtin.lineinfile:
         path: /etc/hosts
         regexp: "^127.0.1.1"
+        state: absent
+
+    - name: Adicionar novo hostname no /etc/hosts
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
         line: "127.0.1.1 aluno-{{ ip_suffix }}"
         state: present
+        create: yes
 
-    - name: Reiniciar para aplicar hostname
+    - name: Reiniciar hostname sem reboot (opcional)
+      ansible.builtin.shell: "hostname aluno-{{ ip_suffix }}"
+      changed_when: false
+
+    - name: Reiniciar para aplicar hostname (caso necessário)
       ansible.builtin.reboot:
         msg: "Reiniciando para aplicar novo hostname"
+      when: ansible_facts['os_family'] == "Debian"  # Ajuste para seu sistema, se necessário

@@ -1,21 +1,18 @@
---- 
-- name: Instalar LibreOffice
+---
+- name: Instalar aplicativos essenciais (LibreOffice, Chrome, Veyon)
   hosts: PCs
   become: true
   vars_files:
     - senha_root.yml
+
   tasks:
+    # Instalar LibreOffice
     - name: Instalar LibreOffice
       ansible.builtin.apt:
         name: libreoffice
         state: present
 
-- name: Instalar Google Chrome
-  hosts: PCs
-  become: true
-  vars_files:
-    - senha_root.yml
-  tasks:
+    # Instalar Google Chrome
     - name: Baixar o pacote .deb do Google Chrome
       ansible.builtin.get_url:
         url: "https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"
@@ -31,5 +28,23 @@
         path: "/tmp/google-chrome-stable_current_amd64.deb"
         state: absent
 
-  vars: 
+    # Instalar Veyon
+    - name: Atualizar repositórios antes de instalar Veyon
+      ansible.builtin.apt:
+        update_cache: yes
+
+    - name: Instalar Veyon
+      ansible.builtin.apt:
+        name: veyon
+        state: present
+
+    - name: Verificar versão do Veyon
+      ansible.builtin.command: veyon-cli --version
+      register: veyon_version
+
+    - name: Exibir versão instalada do Veyon
+      ansible.builtin.debug:
+        msg: "Veyon instalado: {{ veyon_version.stdout }}"
+
+  vars:
     ansible_become_pass: "{{ senha_root }}"
